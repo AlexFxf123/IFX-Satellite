@@ -1,0 +1,82 @@
+close all;clear;clc
+
+%% Path to the Binary file captured from the 2-chip cascade board
+% filePathData0 = 'D:\HQ\双级联雷达demo\1_Matlab\systemProcess-yingheng-ziyanbodao\data road\20260819luce\radar_data\port0\';
+% filePathData1 = 'D:\HQ\双级联雷达demo\1_Matlab\systemProcess-yingheng-ziyanbodao\data road\20260819luce\radar_data\port1\';
+% filePathImg = 'D:\HQ\双级联雷达demo\1_Matlab\systemProcess-yingheng-ziyanbodao\data road\20260819luce\port9\';
+filePathData0 = '.\data road\BJT_20260827_114500\port0_radar_master\';
+filePathData1 = '.\data road\BJT_20260827_114500\port1_radar_slave\';
+filePathImg = '.\data road\BJT_20260827_114500\port9_radar_cam_front_wide\';
+
+dirout_dataA = dir(fullfile(filePathData0,'*.raw'));
+dirout_dataB = dir(fullfile(filePathData1,'*.raw'));
+dirout_dataI = dir(fullfile(filePathImg,'*.jpg'));
+nFrameA = length(dirout_dataA);
+nFrameB = length(dirout_dataB);
+if nFrameA == nFrameB
+    nFrame = nFrameA;
+else
+    nFrame = 0;
+end
+
+chirpClassify = 1;
+
+%% 仿真参数设置
+paramsConfig = chirpParamsConfig(chirpClassify);
+ 
+Frame_start = 1;                                              % 开始帧
+signDML = 0;                                                    % DML测角开关
+plotSign = 0;                                                   % 画图开关
+
+for frameID = Frame_start:nFrame
+    
+    frameID
+
+    fileNameA = dirout_dataA(frameID).name;
+    fileNameB = dirout_dataB(frameID).name;
+    fileNameI = dirout_dataI(frameID).name;
+    %% ADC数据读取  
+    [adcOutFrame,imgVideo] = ADCDataPrepro(fileNameA,fileNameB,fileNameI,filePathData0,filePathData1,filePathImg,paramsConfig);%imgVideo
+
+    %% ADC数据基础处理
+    [rangeDoppler,detMatrix_dB] = ADCDataProcessing(adcOutFrame,paramsConfig);
+   
+    if plotSign == 1
+        figure(1); mesh(detMatrix_dB);grid on;
+        xlabel('Range-bin');ylabel('Doppler-Bin');zlabel('Magnitude (dB)');
+        title('RV detmatrix')
+    end
+
+    %% 子带积累检测
+    [detObjlist_subBand,detRangeSNR] = detSubBand(paramsConfig,detMatrix_dB,plotSign,chirpClassify);
+    
+    if plotSign == 1
+        figure(3); mesh(detObjlist_subBand);grid on;%flipud
+        title('子带CFAR检测结果');
+    end
+
+    %% 解调匹配
+    [rxChannelAll,objList_decode,paramsConfig] = DDMADemodulate(rangeDoppler,detMatrix_dB,detObjlist_subBand,detRangeSNR,paramsConfig);
+
+    if plotSign == 1
+        figure(4);scatter(objList_decode(:,1),objList_decode(:,2));grid on;%flipud
+        xlim([0,255]);ylim([0,383]);
+        title('匹配解调检测结果');
+    end
+
+    %% 测角 FFT/DBF/DML
+    load comp_val_yheng_zy_20260731.mat
+    objList_doa = doaEstimated(objList_decode,rxChannelAll,comp_val_0,paramsConfig,signDML); % rangeIdx,dopplerIdx,azi(1~3),ele(1~3)
+    
+    %% 转换坐标
+    objList_doa(:,3) = objList_doa(:,3) - 2.4;% 安装位置角度偏离补偿  0.2m -2.8°
+    objList = coordinateTrans(objList_doa,paramsConfig); % 1:rangeIdx，2:speedIdx，3:横坐标1，4:纵坐标1，5:高度1，
+    % 6:横坐标2，7:纵坐标2，8:高度2，9:横坐标3，10:纵坐标3，11:高度3，12:speed，13:range，14:azi1，15:azi2，16:azi3，17:ele1，18:ele2，19:ele3，
+
+    %% 画图
+    [h1,h4] = plotFigureShow(objList,frameID,chirpClassify,imgVideo,paramsConfig);%imgVideo,
+    length(objList(:,1))
+    cla(h1);
+    cla(h4);
+
+end
