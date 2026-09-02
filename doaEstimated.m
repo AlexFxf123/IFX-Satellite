@@ -38,139 +38,140 @@ for m = 1:objNum
     objList_doa(m,1) = objList_decode(m,1);   % range
     objList_doa(m,2) = objList_decode(m,2);   % doppler
     objList_doa(m,3) = aziorig;               % azimuth
+    objList_doa(m,4) = eleComp;               % elevation
     objList_doa(m,13) = objList_decode(m,3);  % SNR
 
-    %% DBF测角
-    x_azi_DBF = ant_pos_azi.';
-    x_ele_DBF = (ant_pos_ele - ant_pos_ele(1)).';
-    theta_DBF = -60:0.1:60;                     % 方位角度范围（度）
-    phi_DBF = -15:0.1:15;                       % 俯仰角度范围（度）
-    W_azi = exp(-1i*2 * pi * x_azi_DBF .* sind(theta_DBF) * 0.55);
-    W_ele = exp(-1i*2 * pi * x_ele_DBF .* sind(phi_DBF) * 0.75);
-
-    array_azi_DBF_comp = abs(data_azi_comp * W_azi);
-    array_ele_DBF_comp = abs(data_ele_comp * W_ele);
-
-    [peak_dbf_comp,idx_dbf_comp] = max(array_azi_DBF_comp);
-    azi_DBF_comp = theta_DBF(idx_dbf_comp);
-
-    [peak_dbf_comp1,idx_dbf_comp1] = max(array_ele_DBF_comp);
-    ele_DBF_comp = phi_DBF(idx_dbf_comp1);
-
-    if (abs(ele_DBF_comp - eleComp) < 2)        % 存储俯仰角度
-        objList_doa(m,4) = ele_DBF_comp;        % 俯仰峰值角度
-    else
-        objList_doa(m,4) = 0;
-    end
-
-    % 归一化方向图
-    array_azi_DBF_comp = 20*log10(array_azi_DBF_comp / peak_dbf_comp);
-    array_ele_DBF_comp = 20*log10(array_ele_DBF_comp / peak_dbf_comp1);
-
-    % 0.1度测角增2点方案（方位）
-    if paramsConfig.doaPointIncresed01 == 1
-        % 方位
-        if (idx_dbf_comp > 1)
-            interpOffset = QuadraticInterp(array_azi_DBF_comp, idx_dbf_comp - 1);
-            azi_DBF_comp1 = theta_DBF(idx_dbf_comp - 1); % 方位左边角度
-            azi_DBF_comp1 = azi_DBF_comp1 + interpOffset * 0.1;
-        else
-            azi_DBF_comp1 = theta_DBF(idx_dbf_comp); % 方位左边角度
-        end
-        if (idx_dbf_comp < length(theta_DBF))
-            interpOffset = QuadraticInterp(array_azi_DBF_comp, idx_dbf_comp + 1);
-            azi_DBF_comp2 = theta_DBF(idx_dbf_comp + 1); % 方位右边角度
-            azi_DBF_comp2 = azi_DBF_comp2 + interpOffset * 0.1;
-        else
-            azi_DBF_comp2 = theta_DBF(idx_dbf_comp); % 方位右边角度
-        end
-
-        if (abs(azi_DBF_comp - aziorig) < 1)
-            objList_doa(m,3) = azi_DBF_comp;        % 方位峰值角度
-            objList_doa(m,4) = azi_DBF_comp1;       % 方位峰值左边角度
-            objList_doa(m,5) = azi_DBF_comp2;       % 方位峰值右边角度
-        else
-            objList_doa(m,3:5) = azi_DBF_comp;
-        end
-
-        % 俯仰
-        if (idx_dbf_comp1 > 1)
-            ele_DBF_comp1 = phi_DBF(idx_dbf_comp1 - 1); % 俯仰左边角度
-        else
-            ele_DBF_comp1 = phi_DBF(idx_dbf_comp1); % 俯仰左边角度
-        end
-        if (idx_dbf_comp1 < length(phi_DBF))
-            ele_DBF_comp2 = phi_DBF(idx_dbf_comp1 + 1); % 俯仰右边角度
-        else
-            ele_DBF_comp2 = phi_DBF(idx_dbf_comp1); % 俯仰右边角度
-        end
-
-        if (abs(ele_DBF_comp - eleComp) < 2)        % 存储俯仰角度
-            objList_doa(m,6) = ele_DBF_comp;        % 俯仰峰值角度
-            objList_doa(m,7) = ele_DBF_comp1;       % 俯仰峰值左边角度
-            objList_doa(m,8) = ele_DBF_comp2;       % 俯仰峰值右边角度
-        else
-            objList_doa(m,6:8) = 0;
-        end
-    end
-
-    % 0.02度测角增4点方案（方位）
-    if paramsConfig.doaPointIncresed002 == 1
-        % 方位
-        if (idx_dbf_comp > 1)
-            azi_DBF_comp1 = azi_DBF_comp - 0.02; % 方位左边角度
-            azi_DBF_comp2 = azi_DBF_comp - 0.04; % 方位左边角度
-        else
-            azi_DBF_comp1 = theta_DBF(idx_dbf_comp); % 方位左边角度
-            azi_DBF_comp2 = theta_DBF(idx_dbf_comp); % 方位左边角度
-        end
-
-        if (idx_dbf_comp < length(theta_DBF))
-            azi_DBF_comp3 = azi_DBF_comp + 0.02; % 方位右边角度
-            azi_DBF_comp4 = azi_DBF_comp + 0.04; % 方位右边角度
-        else
-            azi_DBF_comp3 = theta_DBF(idx_dbf_comp); % 方位右边角度
-            azi_DBF_comp4 = theta_DBF(idx_dbf_comp); % 方位右边角度
-        end
-
-        % 俯仰
-        if (idx_dbf_comp1 > 1)
-            ele_DBF_comp1 = phi_DBF(idx_dbf_comp1 - 1); % 俯仰左边角度
-            ele_DBF_comp2 = phi_DBF(idx_dbf_comp1 - 1); % 俯仰左边角度
-        else
-            ele_DBF_comp1 = phi_DBF(idx_dbf_comp1); % 俯仰左边角度
-            ele_DBF_comp2 = phi_DBF(idx_dbf_comp1); % 俯仰左边角度
-        end
-        if (idx_dbf_comp1 < length(phi_DBF))
-            ele_DBF_comp3 = phi_DBF(idx_dbf_comp1 + 1); % 俯仰右边角度
-            ele_DBF_comp4 = phi_DBF(idx_dbf_comp1 + 1); % 俯仰右边角度
-        else
-            ele_DBF_comp3 = phi_DBF(idx_dbf_comp1); % 俯仰右边角度
-            ele_DBF_comp4 = phi_DBF(idx_dbf_comp1); % 俯仰右边角度
-        end
-
-        if (abs(azi_DBF_comp - aziorig) < 1)
-            objList_doa(m,3) = azi_DBF_comp;        % 方位峰值角度
-            objList_doa(m,4) = azi_DBF_comp1;       % 方位峰值左边角度
-            objList_doa(m,5) = azi_DBF_comp2;       % 方位峰值右边角度
-            objList_doa(m,6) = azi_DBF_comp3;       % 方位峰值左边角度
-            objList_doa(m,7) = azi_DBF_comp4;       % 方位峰值右边角度
-        else
-            objList_doa(m,3:7) = azi_DBF_comp;
-        end
-
-        if (abs(ele_DBF_comp - eleComp) < 2)        % 存储俯仰角度
-            objList_doa(m,8) = ele_DBF_comp;        % 俯仰峰值角度
-            objList_doa(m,9) = ele_DBF_comp1;       % 俯仰峰值左边角度
-            objList_doa(m,10) = ele_DBF_comp2;      % 俯仰峰值右边角度
-            objList_doa(m,11) = ele_DBF_comp3;      % 俯仰峰值左边角度
-            objList_doa(m,12) = ele_DBF_comp4;      % 俯仰峰值右边角度
-        else
-            objList_doa(m,8:12) = 0;
-        end
-    end
-
-    % 绘制方向图
+    % %% DBF测角
+    % x_azi_DBF = ant_pos_azi.';
+    % x_ele_DBF = (ant_pos_ele - ant_pos_ele(1)).';
+    % theta_DBF = -60:0.1:60;                     % 方位角度范围（度）
+    % phi_DBF = -15:0.1:15;                       % 俯仰角度范围（度）
+    % W_azi = exp(-1i*2 * pi * x_azi_DBF .* sind(theta_DBF) * 0.55);
+    % W_ele = exp(-1i*2 * pi * x_ele_DBF .* sind(phi_DBF) * 0.75);
+    %
+    % array_azi_DBF_comp = abs(data_azi_comp * W_azi);
+    % array_ele_DBF_comp = abs(data_ele_comp * W_ele);
+    %
+    % [peak_dbf_comp,idx_dbf_comp] = max(array_azi_DBF_comp);
+    % azi_DBF_comp = theta_DBF(idx_dbf_comp);
+    %
+    % [peak_dbf_comp1,idx_dbf_comp1] = max(array_ele_DBF_comp);
+    % ele_DBF_comp = phi_DBF(idx_dbf_comp1);
+    %
+    % if (abs(ele_DBF_comp - eleComp) < 2)        % 存储俯仰角度
+    %     objList_doa(m,4) = ele_DBF_comp;        % 俯仰峰值角度
+    % else
+    %     objList_doa(m,4) = 0;
+    % end
+    %
+    % % 归一化方向图
+    % array_azi_DBF_comp = 20*log10(array_azi_DBF_comp / peak_dbf_comp);
+    % array_ele_DBF_comp = 20*log10(array_ele_DBF_comp / peak_dbf_comp1);
+    %
+    % % 0.1度测角增2点方案（方位）
+    % if paramsConfig.doaPointIncresed01 == 1
+    %     % 方位
+    %     if (idx_dbf_comp > 1)
+    %         interpOffset = QuadraticInterp(array_azi_DBF_comp, idx_dbf_comp - 1);
+    %         azi_DBF_comp1 = theta_DBF(idx_dbf_comp - 1); % 方位左边角度
+    %         azi_DBF_comp1 = azi_DBF_comp1 + interpOffset * 0.1;
+    %     else
+    %         azi_DBF_comp1 = theta_DBF(idx_dbf_comp); % 方位左边角度
+    %     end
+    %     if (idx_dbf_comp < length(theta_DBF))
+    %         interpOffset = QuadraticInterp(array_azi_DBF_comp, idx_dbf_comp + 1);
+    %         azi_DBF_comp2 = theta_DBF(idx_dbf_comp + 1); % 方位右边角度
+    %         azi_DBF_comp2 = azi_DBF_comp2 + interpOffset * 0.1;
+    %     else
+    %         azi_DBF_comp2 = theta_DBF(idx_dbf_comp); % 方位右边角度
+    %     end
+    %
+    %     if (abs(azi_DBF_comp - aziorig) < 1)
+    %         objList_doa(m,3) = azi_DBF_comp;        % 方位峰值角度
+    %         objList_doa(m,4) = azi_DBF_comp1;       % 方位峰值左边角度
+    %         objList_doa(m,5) = azi_DBF_comp2;       % 方位峰值右边角度
+    %     else
+    %         objList_doa(m,3:5) = azi_DBF_comp;
+    %     end
+    %
+    %     % 俯仰
+    %     if (idx_dbf_comp1 > 1)
+    %         ele_DBF_comp1 = phi_DBF(idx_dbf_comp1 - 1); % 俯仰左边角度
+    %     else
+    %         ele_DBF_comp1 = phi_DBF(idx_dbf_comp1); % 俯仰左边角度
+    %     end
+    %     if (idx_dbf_comp1 < length(phi_DBF))
+    %         ele_DBF_comp2 = phi_DBF(idx_dbf_comp1 + 1); % 俯仰右边角度
+    %     else
+    %         ele_DBF_comp2 = phi_DBF(idx_dbf_comp1); % 俯仰右边角度
+    %     end
+    %
+    %     if (abs(ele_DBF_comp - eleComp) < 2)        % 存储俯仰角度
+    %         objList_doa(m,6) = ele_DBF_comp;        % 俯仰峰值角度
+    %         objList_doa(m,7) = ele_DBF_comp1;       % 俯仰峰值左边角度
+    %         objList_doa(m,8) = ele_DBF_comp2;       % 俯仰峰值右边角度
+    %     else
+    %         objList_doa(m,6:8) = 0;
+    %     end
+    % end
+    %
+    % % 0.02度测角增4点方案（方位）
+    % if paramsConfig.doaPointIncresed002 == 1
+    %     % 方位
+    %     if (idx_dbf_comp > 1)
+    %         azi_DBF_comp1 = azi_DBF_comp - 0.02; % 方位左边角度
+    %         azi_DBF_comp2 = azi_DBF_comp - 0.04; % 方位左边角度
+    %     else
+    %         azi_DBF_comp1 = theta_DBF(idx_dbf_comp); % 方位左边角度
+    %         azi_DBF_comp2 = theta_DBF(idx_dbf_comp); % 方位左边角度
+    %     end
+    %
+    %     if (idx_dbf_comp < length(theta_DBF))
+    %         azi_DBF_comp3 = azi_DBF_comp + 0.02; % 方位右边角度
+    %         azi_DBF_comp4 = azi_DBF_comp + 0.04; % 方位右边角度
+    %     else
+    %         azi_DBF_comp3 = theta_DBF(idx_dbf_comp); % 方位右边角度
+    %         azi_DBF_comp4 = theta_DBF(idx_dbf_comp); % 方位右边角度
+    %     end
+    %
+    %     % 俯仰
+    %     if (idx_dbf_comp1 > 1)
+    %         ele_DBF_comp1 = phi_DBF(idx_dbf_comp1 - 1); % 俯仰左边角度
+    %         ele_DBF_comp2 = phi_DBF(idx_dbf_comp1 - 1); % 俯仰左边角度
+    %     else
+    %         ele_DBF_comp1 = phi_DBF(idx_dbf_comp1); % 俯仰左边角度
+    %         ele_DBF_comp2 = phi_DBF(idx_dbf_comp1); % 俯仰左边角度
+    %     end
+    %     if (idx_dbf_comp1 < length(phi_DBF))
+    %         ele_DBF_comp3 = phi_DBF(idx_dbf_comp1 + 1); % 俯仰右边角度
+    %         ele_DBF_comp4 = phi_DBF(idx_dbf_comp1 + 1); % 俯仰右边角度
+    %     else
+    %         ele_DBF_comp3 = phi_DBF(idx_dbf_comp1); % 俯仰右边角度
+    %         ele_DBF_comp4 = phi_DBF(idx_dbf_comp1); % 俯仰右边角度
+    %     end
+    %
+    %     if (abs(azi_DBF_comp - aziorig) < 1)
+    %         objList_doa(m,3) = azi_DBF_comp;        % 方位峰值角度
+    %         objList_doa(m,4) = azi_DBF_comp1;       % 方位峰值左边角度
+    %         objList_doa(m,5) = azi_DBF_comp2;       % 方位峰值右边角度
+    %         objList_doa(m,6) = azi_DBF_comp3;       % 方位峰值左边角度
+    %         objList_doa(m,7) = azi_DBF_comp4;       % 方位峰值右边角度
+    %     else
+    %         objList_doa(m,3:7) = azi_DBF_comp;
+    %     end
+    %
+    %     if (abs(ele_DBF_comp - eleComp) < 2)        % 存储俯仰角度
+    %         objList_doa(m,8) = ele_DBF_comp;        % 俯仰峰值角度
+    %         objList_doa(m,9) = ele_DBF_comp1;       % 俯仰峰值左边角度
+    %         objList_doa(m,10) = ele_DBF_comp2;      % 俯仰峰值右边角度
+    %         objList_doa(m,11) = ele_DBF_comp3;      % 俯仰峰值左边角度
+    %         objList_doa(m,12) = ele_DBF_comp4;      % 俯仰峰值右边角度
+    %     else
+    %         objList_doa(m,8:12) = 0;
+    %     end
+    % end
+    %
+    % % 绘制方向图
 
 %     figure;
 %     plot(theta_DBF, array_azi_DBF_comp);hold on; grid on;
@@ -262,23 +263,23 @@ for m = 1:objNum
 %     title(['方位面方向图校准后 ','azi = ',num2str(theta_comp)]);
 %     % axis([-100 100 -80 0]);
 
-    %% DML测角
-    if signDML == 1
-        ant_pos_x_DML = (paramsConfig.virtualPosX + 1).';
-        ant_pos_y_DML = (paramsConfig.virtualPosY - paramsConfig.virtualPosY(1) + 1).';
-
-        data_test_comp_DML = rxVirtualChannelData.* comp_val_0;
-
-        theta_grid = -60:0.2:60;
-        phi_grid = -15:0.2:12;
-
-        [phi_est, theta_est, P_DML] = DML_URA_2D(data_test_comp_DML.', ant_pos_x_DML, ant_pos_y_DML, theta_grid, phi_grid, paramsConfig.spaceX, paramsConfig.spaceY);
-        % 输出时方位俯仰已对应纠正
-        disp(['Estimated: Azimuth=', num2str(theta_est), '°, Elevation=', num2str(phi_est), '°']);
-
-        % figure
-        % mesh(P_DML);
-    end
+    % %% DML测角
+    % if signDML == 1
+    %     ant_pos_x_DML = (paramsConfig.virtualPosX + 1).';
+    %     ant_pos_y_DML = (paramsConfig.virtualPosY - paramsConfig.virtualPosY(1) + 1).';
+    %
+    %     data_test_comp_DML = rxVirtualChannelData.* comp_val_0;
+    %
+    %     theta_grid = -60:0.2:60;
+    %     phi_grid = -15:0.2:12;
+    %
+    %     [phi_est, theta_est, P_DML] = DML_URA_2D(data_test_comp_DML.', ant_pos_x_DML, ant_pos_y_DML, theta_grid, phi_grid, paramsConfig.spaceX, paramsConfig.spaceY);
+    %     % 输出时方位俯仰已对应纠正
+    %     disp(['Estimated: Azimuth=', num2str(theta_est), '°, Elevation=', num2str(phi_est), '°']);
+    %
+    %     % figure
+    %     % mesh(P_DML);
+    % end
 end
 end
 
@@ -337,29 +338,24 @@ MagSqr1_dB = 20*log10(abs(fftshift(s_fft_abs/peak_max)));
 
 end
 
-% DML测角函数
-function [phi_est, theta_est, P_DML] = DML_URA_2D(data, X, Y, theta_grid, phi_grid, spacing_azi, spacing_ele)
-
-    [P, T] = size(data);
-    R_hat = (1/P) * (data * data');                         % 样本协方差矩阵
-    P_DML = zeros(length(theta_grid), length(phi_grid));
-
-    % 遍历角度网格
-    for i = 1:length(theta_grid)
-        for j = 1:length(phi_grid)
-            theta = theta_grid(i);
-            phi = phi_grid(j);
-            Fx = exp(-1i*X*2*pi*spacing_azi*sind(theta)*cosd(phi));
-            Fy = exp(-1i*Y*2*pi*spacing_ele*sind(phi));
-            A = Fx.*Fy;
-            P_A = A * pinv(A' * A) * A';            % 投影矩阵
-            P_DML(i,j) = abs(trace(P_A * R_hat));   % DML代价函数
-        end
-    end
-
-    % 寻找峰值
-    [~, idx] = max(P_DML(:));
-    [i, j] = ind2sub(size(P_DML), idx);
-    theta_est = -1*theta_grid(i);
-    phi_est = -1*phi_grid(j);
-end
+% % DML测角函数
+% function [phi_est, theta_est, P_DML] = DML_URA_2D(data, X, Y, theta_grid, phi_grid, spacing_azi, spacing_ele)
+% 
+%     [P, T] = size(data);
+%     R_hat = (1/P) * (data * data');                         % 样本协方差矩阵
+%     P_DML = zeros(length(theta_grid), length(phi_grid));
+% 
+%     % 遍历角度网格
+%     for i = 1:length(theta_grid)
+%         for j = 1:length(phi_grid)
+%             theta = theta_grid(i);
+%             phi = phi_grid(j);
+%             Fx = exp(-1i*X*2*pi*spacing_azi*sind(theta)*cosd(phi));
+%             Fy = exp(-1i*Y*2*pi*spacing_ele*sind(phi));
+%             A = Fx.*Fy;
+%             P_A = A * pinv(A' * A) * A';            % 投影矩阵
+%             P_DML(i,j) = abs(trace(P_A * R_hat));   % DML代价函数
+%         end
+%     end
+% 
+%     % 寻找峰值
