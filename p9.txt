@@ -1,0 +1,26 @@
+type= pinhole
+imageWidth= 3840
+imageHeight= 2160
+fx= 1909.8956460710
+fy= 1909.3369972662
+cx= 1922.8073212009
+cy= 1084.4421887270
+k1= 23.1846139002
+k2= 13.9531484754
+p1= 0.0002145402
+p2= 0.0000006458
+k3= 0.7535716687
+k4= 23.5358753207
+k5= 22.2758375461
+k6= 3.7045930446
+
+PixelSize= 2.1000 um
+IdealLensFocalLength= 4.0100 mm
+RealLensFocalLength_x= 4.0108 [offset: 0.0008] mm (0.371837) pixel
+RealLensFocalLength_y= 4.0096 [offset: -0.0004] mm (-0.186812) pixel
+
+RMS_MEAN= 0.0117
+RMS_Max= 0.0134
+RMS_Min= 0.0098
+COD_X= 2.8073
+COD_Y= 4.4422
