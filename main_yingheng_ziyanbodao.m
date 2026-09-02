@@ -29,6 +29,8 @@ Frame_start = 1;                                              % 开始帧
 signDML = 0;                                                    % DML测角开关
 plotSign = 0;                                                   % 画图开关
 moduleTimeSign = 1;                                            % 各模块耗时统计开关，1=开启，0=关闭
+plotEveryNFrame = 1;                                            % 图片每帧刷新
+plotHandles = struct('fig',[], 'axPoint',[], 'axImg',[], 'moveHandle',[], 'staticHandle',[], 'imgHandle',[]);
 
 for frameID = Frame_start:nFrame
     
@@ -113,15 +115,15 @@ for frameID = Frame_start:nFrame
     end
 
     %% 画图
-    if moduleTimeSign == 1
-        tPlot = tic;
+    if mod(frameID, plotEveryNFrame) == 0 || frameID == Frame_start
+        if moduleTimeSign == 1
+            tPlot = tic;
+        end
+        [h1,h4,plotHandles] = plotFigureShow(objList,frameID,chirpClassify,imgVideo,paramsConfig,plotHandles);%imgVideo,
+        if moduleTimeSign == 1
+            fprintf('plotFigureShow elapsed: %.3f s\n', toc(tPlot));
+        end
+        length(objList(:,1))
     end
-    [h1,h4] = plotFigureShow(objList,frameID,chirpClassify,imgVideo,paramsConfig);%imgVideo,
-    if moduleTimeSign == 1
-        fprintf('plotFigureShow elapsed: %.3f s\n', toc(tPlot));
-    end
-    length(objList(:,1))
-    cla(h1);
-    cla(h4);
 
 end
