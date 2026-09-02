@@ -25,11 +25,11 @@ chirpClassify = 1;
 %% 仿真参数设置
 paramsConfig = chirpParamsConfig(chirpClassify);
  
-Frame_start = 1;                                                % 开始帧
+Frame_start = 100;                                                % 开始帧
 signDML = 0;                                                    % DML测角开关
 plotSign = 0;                                                   % 画图开关
 moduleTimeSign = 1;                                             % 各模块耗时统计开关，1=开启，0=关闭
-projectionSign = 0;                                             % 点云投影到图像开关，1=开启，0=关闭
+projectionSign = 1;                                             % 点云投影到图像开关，1=开启，0=关闭
 plotEveryNFrame = 1;                                            % 图片每帧刷新
 plotHandles = struct('fig',[], 'axPoint',[], 'axImg',[], 'moveHandle',[], 'staticHandle',[], 'imgHandle',[]);
 

@@ -1,7 +1,10 @@
-function [h1,h4,plotHandles] = plotFigureShow(objList,frameID,chirpClassify,imgVideo,paramsConfig,plotHandles)%imgVideo,
+function [h1,h4,plotHandles] = plotFigureShow(objList,frameID,chirpClassify,imgVideo,paramsConfig,plotHandles,projectionSign)%imgVideo,
 %     [idxMove,~] = find(abs(objList(:,5)) >= 1); %rangeIdx,speedIdx,横坐标，纵坐标，高度，speed,range,azimuth
     if nargin < 6 || isempty(plotHandles)
         plotHandles = struct('fig',[], 'axPoint',[], 'axImg',[], 'moveHandle',[], 'staticHandle',[], 'imgHandle',[], 'projectionHandle',[], 'calibration',[]);
+    end
+    if nargin < 7
+        projectionSign = 1;
     end
     if ~isfield(plotHandles,'projectionHandle')
         plotHandles.projectionHandle = [];
@@ -51,9 +54,6 @@ function [h1,h4,plotHandles] = plotFigureShow(objList,frameID,chirpClassify,imgV
     if isempty(xAll)
         xAll = 0; yAll = 0; zAll = 0; validMask = false;
     end
-    if nargin < 7
-        projectionSign = 1;
-    end
 
     if ~isempty(zAll) && any(validMask)
         zMin = -5;
@@ -90,7 +90,12 @@ function [h1,h4,plotHandles] = plotFigureShow(objList,frameID,chirpClassify,imgV
     end
 
     imgDisplay = undistortCameraFrame(imgVideo);
-    [uProjection,vProjection] = projectRadarPointsToImage(xProjection,yProjection,zProjection,size(imgDisplay));
+    if projectionSign == 1
+        [uProjection,vProjection] = projectRadarPointsToImage(xProjection,yProjection,zProjection,size(imgDisplay));
+    else
+        uProjection = nan(size(xProjection));
+        vProjection = nan(size(yProjection));
+    end
     if isgraphics(plotHandles.projectionHandle,'scatter')
         set(plotHandles.projectionHandle,'XData',uProjection,'YData',vProjection,'CData',colorMap, ...
             'MarkerFaceColor','flat','MarkerEdgeColor','k','LineWidth',0.5);
@@ -116,11 +121,6 @@ function [h1,h4,plotHandles] = plotFigureShow(objList,frameID,chirpClassify,imgV
         set(plotHandles.imgHandle,'CData',imgDisplay);
     else
         plotHandles.imgHandle = imshow(imgDisplay, 'Parent', plotHandles.axImg);
-    if projectionSign == 1
-        [uProjection,vProjection] = projectRadarPointsToImage(xProjection,yProjection,zProjection,size(imgDisplay));
-    else
-        uProjection = nan(size(xProjection));
-        vProjection = nan(size(yProjection));
     end
     title(plotHandles.axImg,'视频播放');
 
