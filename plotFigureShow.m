@@ -28,17 +28,52 @@ function [h1,h4,plotHandles] = plotFigureShow(objList,frameID,chirpClassify,imgV
         end
     end
 
-    % 仅保留 XY 平面点云，不再按速度门限切分目标；否则会漏掉大量有效点
+    % 仅保留 XY 平面点云，并按高度映射颜色：高度 5m~ -5m 范围内显示，超出该范围直接过滤
     xAll = objList(:,3);
     yAll = objList(:,4);
+    zAll = objList(:,5);
 
-    if isempty(xAll), xAll = 0; yAll = 0; end
+    validMask = (zAll >= -5) & (zAll <= 5);
+    xAll = xAll(validMask);
+    yAll = yAll(validMask);
+    zAll = zAll(validMask);
+
+    if isempty(xAll)
+        xAll = 0; yAll = 0; zAll = 0; validMask = false;
+    end
+
+    if ~isempty(zAll) && any(validMask)
+        zMin = -5;
+        zMax = 5;
+        nBins = 11;
+        zClamped = min(max(zAll, zMin), zMax);
+        zNorm = (zClamped - zMin) / (zMax - zMin);
+        binIndex = min(max(floor(zNorm * nBins) + 1, 1), nBins);
+
+        % 11 级颜色表：紫 -> 红
+        colorTable = [
+            0.35, 0.00, 0.85;
+            0.45, 0.05, 0.85;
+            0.55, 0.15, 0.80;
+            0.45, 0.35, 0.75;
+            0.25, 0.55, 0.80;
+            0.15, 0.75, 0.75;
+            0.10, 0.88, 0.50;
+            0.40, 0.90, 0.25;
+            0.75, 0.82, 0.18;
+            0.95, 0.48, 0.15;
+            1.00, 0.00, 0.00];
+
+        colorMap = colorTable(binIndex, :);
+    else
+        colorMap = [0,1,0];
+    end
 
     if isgraphics(plotHandles.moveHandle,'scatter')
-        set(plotHandles.moveHandle,'XData',xAll,'YData',yAll);
+        set(plotHandles.moveHandle,'XData',xAll,'YData',yAll,'CData',colorMap);
     end
     if isgraphics(plotHandles.staticHandle,'scatter')
-        set(plotHandles.staticHandle,'XData',xAll,'YData',yAll);
+        set(plotHandles.staticHandle,'XData',xAll,'YData',yAll,'CData',colorMap);
     end
 
     if chirpClassify == 0.2
