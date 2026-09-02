@@ -1,16 +1,17 @@
 close all;clear;clc
 
 %% Path to the Binary file captured from the 2-chip cascade board
-% filePathData0 = 'D:\HQ\双级联雷达demo\1_Matlab\systemProcess-yingheng-ziyanbodao\data road\20260819luce\radar_data\port0\';
-% filePathData1 = 'D:\HQ\双级联雷达demo\1_Matlab\systemProcess-yingheng-ziyanbodao\data road\20260819luce\radar_data\port1\';
-% filePathImg = 'D:\HQ\双级联雷达demo\1_Matlab\systemProcess-yingheng-ziyanbodao\data road\20260819luce\port9\';
-filePathData0 = '.\data road\BJT_20260827_114500\port0_radar_master\';
-filePathData1 = '.\data road\BJT_20260827_114500\port1_radar_slave\';
-filePathImg = '.\data road\BJT_20260827_114500\port9_radar_cam_front_wide\';
+baseDir = fileparts(mfilename('fullpath'));
+filePathData0 = fullfile(baseDir, 'data', 'BJT_20260827_114500', 'port0_radar_master');
+filePathData1 = fullfile(baseDir, 'data', 'BJT_20260827_114500', 'port1_radar_slave');
+filePathImg   = fullfile(baseDir, 'data', 'BJT_20260827_114500', 'port9_cam_front_wide');
 
-dirout_dataA = dir(fullfile(filePathData0,'*.raw'));
-dirout_dataB = dir(fullfile(filePathData1,'*.raw'));
-dirout_dataI = dir(fullfile(filePathImg,'*.jpg'));
+dirout_dataA = dir(fullfile(filePathData0, '*.raw'));
+dirout_dataB = dir(fullfile(filePathData1, '*.raw'));
+dirout_dataI = dir(fullfile(filePathImg, '*.jpeg'));
+if isempty(dirout_dataI)
+    dirout_dataI = dir(fullfile(filePathImg, '*.jpg'));
+end
 nFrameA = length(dirout_dataA);
 nFrameB = length(dirout_dataB);
 if nFrameA == nFrameB

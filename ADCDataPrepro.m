@@ -1,12 +1,27 @@
 function [adcOutFrame,imgVideo] = ADCDataPrepro(fileNameA,fileNameB,fileNameI,filePathData0,filePathData1,filePathImg,paramsConfig)%imgVideo
 
-filePathA = strcat(filePathData0, fileNameA);
-filePathB = strcat(filePathData1, fileNameB);
-filePathI = strcat(filePathImg, fileNameI);
+filePathA = fullfile(filePathData0, fileNameA);
+filePathB = fullfile(filePathData1, fileNameB);
+filePathI = fullfile(filePathImg, fileNameI);
+
+if ~exist(filePathA,'file')
+    error('ADCDataPrepro:MissingFileA', 'Raw file A not found: %s', filePathA);
+end
+if ~exist(filePathB,'file')
+    error('ADCDataPrepro:MissingFileB', 'Raw file B not found: %s', filePathB);
+end
+if ~exist(filePathI,'file')
+    error('ADCDataPrepro:MissingImage', 'Image file not found: %s', filePathI);
+end
+
 fpA = fopen(filePathA,'rb');
 fpB = fopen(filePathB,'rb');
-rawDataA = fread(fpA, 'int16', 'l');
-rawDataB = fread(fpB, 'int16', 'l');
+if fpA == -1 || fpB == -1
+    error('ADCDataPrepro:OpenFailed', 'Failed to open raw data files: %s or %s', filePathA, filePathB);
+end
+
+rawDataA = fread(fpA, inf, 'int16', 0, 'l');
+rawDataB = fread(fpB, inf, 'int16', 0, 'l');
 imgVideo = imread(filePathI);
 
 fclose(fpA);
