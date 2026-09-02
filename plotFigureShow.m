@@ -18,37 +18,33 @@ function [h1,h4] = plotFigureShow(objList,frameID,chirpClassify,imgVideo,paramsC
 
     h1 = subplot(1,6,[5,6]);
     if paramsConfig.doaPointIncresed01 ~= 1
-        scatter3(xPerM,yPerM,zPerM,6,[0,1,0],'filled');hold on;
-        scatter3(xPerS,yPerS,zPerS,6,[0,1,0],'filled');
+        scatter(xPerM,yPerM,6,[0,1,0],'filled'); hold on;
+        scatter(xPerS,yPerS,6,[0,1,0],'filled');
     else
-        scatter3(xPerM,yPerM,zPerM,5,[0,1,0],'filled');hold on;
-        scatter3(xPerS,yPerS,zPerS,5,[0,1,0],'filled');
+        scatter(xPerM,yPerM,5,[0,1,0],'filled'); hold on;
+        scatter(xPerS,yPerS,5,[0,1,0],'filled');
     end
 
     if chirpClassify == 0.2
-        axis([-10 10 0 60 -2 2]);
+        xlim([-10 10]); ylim([0 60]);
     elseif chirpClassify == 1
-        axis([-15 15 0 270 -2 2]);
-%         xlim([-25, 25]);                                        % 设置x轴范围
-%         ylim([0, 260]);                                         % 设置y轴范围
-%         zlim([-10, 10]);
+        xlim([-15 15]); ylim([0 270]);
     else
-        axis([-35 35 0 305]);
-        xlim([-25, 25]);                                        % 设置x轴范围
-        ylim([0, 260]);                                         % 设置y轴范围
-        zlim([-5, 5]);
+        xlim([-25 25]); ylim([0 260]);
     end
+
     xlabel('横坐标(m)');
     ylabel('纵坐标(m)');
-    zlabel('高度(m)');
-    hold on;                                                    % 保持当前图形，以便在上面绘制额外的线条
-    x = linspace(min(xlim), max(xlim), 100);                    % 在当前xlim范围内生成更多点以增加密度
-    y = linspace(min(ylim), max(ylim), 100);                    % 在当前ylim范围内生成更多点以增加密度
-    plot(x, repmat(min(ylim):diff(ylim)/10:max(ylim), length(x), 1), 'Color',[1,0,0,0.2],'LineStyle','-','LineWidth',1); % 绘制水平网格线
-    plot(repmat(min(xlim):diff(xlim)/10:max(xlim), length(y), 1)', y, 'Color',[1,0,0,0.2],'LineStyle','-','LineWidth',1); % 绘制垂直网格线
-    hold on;                                                    % 结束绘图保持状态
+    grid on;
+    box on;
+    hold on;
+    x = linspace(min(xlim), max(xlim), 100);
+    y = linspace(min(ylim), max(ylim), 100);
+    plot(x, repmat(min(ylim):diff(ylim)/10:max(ylim), length(x), 1), 'Color',[1,0,0,0.2],'LineStyle','-','LineWidth',1);
+    plot(repmat(min(xlim):diff(xlim)/10:max(xlim), length(y), 1)', y, 'Color',[1,0,0,0.2],'LineStyle','-','LineWidth',1);
+    hold on;
 
-    set(gca,'Color', [0 0.3 0.6]);                              % 设置背景为红色
+    set(gca,'Color', [0 0.3 0.6]);
 
     title(sprintf('帧数: %d',frameID));
 
