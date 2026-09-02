@@ -25,10 +25,11 @@ chirpClassify = 1;
 %% 仿真参数设置
 paramsConfig = chirpParamsConfig(chirpClassify);
  
-Frame_start = 1;                                              % 开始帧
+Frame_start = 1;                                                % 开始帧
 signDML = 0;                                                    % DML测角开关
 plotSign = 0;                                                   % 画图开关
-moduleTimeSign = 1;                                            % 各模块耗时统计开关，1=开启，0=关闭
+moduleTimeSign = 1;                                             % 各模块耗时统计开关，1=开启，0=关闭
+projectionSign = 0;                                             % 点云投影到图像开关，1=开启，0=关闭
 plotEveryNFrame = 1;                                            % 图片每帧刷新
 plotHandles = struct('fig',[], 'axPoint',[], 'axImg',[], 'moveHandle',[], 'staticHandle',[], 'imgHandle',[]);
 
@@ -108,8 +109,12 @@ for frameID = Frame_start:nFrame
         tTrans = tic;
     end
     objList_doa(:,3) = objList_doa(:,3) - 2.4;% 安装位置角度偏离补偿  0.2m -2.8°
+    objList_doa(:,4) = objList_doa(:,4) + 2.0;% 安装位置角度偏离补偿
     objList = coordinateTrans(objList_doa,paramsConfig); % 1:rangeIdx，2:speedIdx，3:横坐标1，4:纵坐标1，5:高度1，
     % 6:横坐标2，7:纵坐标2，8:高度2，9:横坐标3，10:纵坐标3，11:高度3，12:speed，13:range，14:azi1，15:azi2，16:azi3，17:ele1，18:ele2，19:ele3，
+    objList(:,3) = objList(:,3) - 0.2; % 安装位置横向坐标补偿
+    objList(:,4) = objList(:,4) + 2.5; % 安装位置纵向坐标补偿
+    objList(:,5) = objList(:,5) - 1.0; % 安装位置高度补偿
     if moduleTimeSign == 1
         fprintf('coordinateTrans elapsed: %.3f s\n', toc(tTrans));
     end
@@ -119,7 +124,7 @@ for frameID = Frame_start:nFrame
         if moduleTimeSign == 1
             tPlot = tic;
         end
-        [h1,h4,plotHandles] = plotFigureShow(objList,frameID,chirpClassify,imgVideo,paramsConfig,plotHandles);%imgVideo,
+        [h1,h4,plotHandles] = plotFigureShow(objList,frameID,chirpClassify,imgVideo,paramsConfig,plotHandles,projectionSign);%imgVideo,
         if moduleTimeSign == 1
             fprintf('plotFigureShow elapsed: %.3f s\n', toc(tPlot));
         end
